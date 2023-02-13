@@ -3,8 +3,12 @@ import * as CANNON from 'cannon-es'
 
 class ThreeCannonBinder {
 
+    constructor(cellSize, initConfig) {
+        this.__cellSize = cellSize;
+    }
+
     __binding = {}
-    CELL_SIZE = 0.1
+    __cellSize = 0.1
 
     bindThreeCannon = function(three, cannon, name) {
         this.__binding[name] = {three: three, cannon:cannon};
@@ -20,9 +24,9 @@ class ThreeCannonBinder {
         let cannonShape = new CANNON.Box(cannonVecDim);
                 
         let initialPosition = new CANNON.Vec3(
-            cannonVecDim.x + x * this.CELL_SIZE, 
-            cannonVecDim.y + y * this.CELL_SIZE, 
-            cannonVecDim.z + z * this.CELL_SIZE
+            cannonVecDim.x + x * this.__cellSize, 
+            cannonVecDim.y + y * this.__cellSize, 
+            cannonVecDim.z + z * this.__cellSize
         )
         
         let cannonBody = new CANNON.Body({

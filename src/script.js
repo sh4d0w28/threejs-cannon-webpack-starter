@@ -82,11 +82,6 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 4))
  */
 let clock = new THREE.Clock();
 
-
-
-
-const CELL_SIZE = 0.1
-
 const groundBody = new CANNON.Body({
     type: CANNON.Body.STATIC,
     shape: new CANNON.Plane()
@@ -94,14 +89,18 @@ const groundBody = new CANNON.Body({
 groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0)
 world.addBody(groundBody)
 
+function loadWorld(worldSpec) {
+    Object.keys(worldSpec).forEach((key) => {
+        console.log(key);
+        loadPhysicsObject(worldSpec, key);
+    })
+}
 
-const level = world_1;
+loadWorld(world_1);
 
-loadPhysicsObject('10x5x15');
+const threeCannonBinder = new ThreeCannonBinder(0.1);
 
-const threeCannonBinder = new ThreeCannonBinder();
-
-function loadPhysicsObject(key) {
+function loadPhysicsObject(level, key) {
     const mtlLoader = new MTLLoader();
     const objLoader = new OBJLoader();
 
@@ -118,10 +117,9 @@ function loadPhysicsObject(key) {
                    child.geometry.center();
                 }
             } ); 
-                 
             level[key].forEach((spec,i) => {
                 const singleObject = object.clone()
-                const cannonBody = threeCannonBinder.getCannon(singleObject, spec.x, spec.y, spec.z, 0, spec.r, 0, 1);
+                const cannonBody = threeCannonBinder.getCannon(singleObject, spec.x, spec.y, spec.z, 0, spec.r, 0, spec.m);
                 scene.add( singleObject );
                 world.addBody(cannonBody);
                 threeCannonBinder.bindThreeCannon(singleObject, cannonBody, key + "_" + i);
