@@ -5,7 +5,8 @@ import CannonDebugger from 'cannon-es-debugger'
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader.js'
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { GUI, GUIController } from 'dat.gui'
+import ThreeCannonBinder from './ThreeCannonBinder';
+import world_1 from './wold_1';
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -86,19 +87,6 @@ let clock = new THREE.Clock();
 
 const CELL_SIZE = 0.1
 
-
-const physicsObjects = {};
-function syncPhysicsObjects() {
-    Object.keys(physicsObjects).forEach((key) => {
-        var po = physicsObjects[key];
-        var threeObject = po.three;
-        var cannonObject = po.cannon;
-        threeObject.position.copy(cannonObject.position);
-        threeObject.quaternion.copy(cannonObject.quaternion);
-    });
-}
-
-
 const groundBody = new CANNON.Body({
     type: CANNON.Body.STATIC,
     shape: new CANNON.Plane()
@@ -107,14 +95,11 @@ groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0)
 world.addBody(groundBody)
 
 
-const level = {
-    '10x5x15':[
-        {x:0,y:0,z:0,r:0,m:1},
-        {x:12,y:0,z:1,r:90,m:1}
-    ]
-}
+const level = world_1;
 
 loadPhysicsObject('10x5x15');
+
+const threeCannonBinder = new ThreeCannonBinder();
 
 function loadPhysicsObject(key) {
     const mtlLoader = new MTLLoader();
@@ -136,40 +121,14 @@ function loadPhysicsObject(key) {
                  
             level[key].forEach((spec,i) => {
                 const singleObject = object.clone()
-            
-                var boundingBox = new THREE.Box3().setFromObject( singleObject );
-                var cannonVecDim = new CANNON.Vec3(
-                    (boundingBox.max.x - boundingBox.min.x)/2,
-                    (boundingBox.max.y - boundingBox.min.y)/2,
-                    (boundingBox.max.z - boundingBox.min.z)/2,
-                )
-                let cannonShape = new CANNON.Box(cannonVecDim);
-                        
-                let initialPosition = new CANNON.Vec3(
-                    cannonVecDim.x + spec.x * CELL_SIZE, 
-                    cannonVecDim.y + spec.y * CELL_SIZE, 
-                    cannonVecDim.z + spec.z * CELL_SIZE
-                )
-                
-                let cannonBody = new CANNON.Body({
-                    position: initialPosition,
-                    mass: spec.m,
-                    shape: cannonShape
-                });
-                cannonBody.quaternion.setFromEuler(0, spec.r * Math.PI / 180, 0);
-
+                const cannonBody = threeCannonBinder.getCannon(singleObject, spec.x, spec.y, spec.z, 0, spec.r, 0, 1);
                 scene.add( singleObject );
                 world.addBody(cannonBody);
-                physicsObjects[key + '_' + i] = {three: singleObject, cannon:cannonBody};
+                threeCannonBinder.bindThreeCannon(singleObject, cannonBody, key + "_" + i);
             })
         });
     });
 }
-
-
-
-
-
 
 
 const animate = () =>
@@ -180,7 +139,7 @@ const animate = () =>
     world.fixedStep()
 
     // Update objects
-    syncPhysicsObjects();
+    threeCannonBinder.syncPhysicsObjects();
 
     // Update Orbital Controls
     controls.update()
