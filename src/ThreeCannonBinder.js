@@ -16,6 +16,7 @@ class ThreeCannonBinder {
 
     getCannon = function (singleObject, x, y, z, rx, ry, rz, m) {
         var boundingBox = new THREE.Box3().setFromObject( singleObject );
+        console.log(boundingBox);
         var cannonVecDim = new CANNON.Vec3(
             (boundingBox.max.x - boundingBox.min.x)/2,
             (boundingBox.max.y - boundingBox.min.y)/2,

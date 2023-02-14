@@ -7,12 +7,16 @@ import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import ThreeCannonBinder from './ThreeCannonBinder';
 import world_1 from './wold_1';
+require('./KeyboardState')
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+
+// Keyboard controller
+let keyboard = new KeyboardState();
 
 // Cannon World
 const world = new CANNON.World({
@@ -82,12 +86,68 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 4))
  */
 let clock = new THREE.Clock();
 
+const slippery = new CANNON.Material({
+    friction: 0.01
+});
+
 const groundBody = new CANNON.Body({
     type: CANNON.Body.STATIC,
-    shape: new CANNON.Plane()
+    shape: new CANNON.Plane(),
+    material: slippery
 });
 groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0)
 world.addBody(groundBody)
+
+
+
+
+
+var playerBody;
+loadPlayerObject();
+
+function loadPlayerObject() {
+    const mtlLoader = new MTLLoader();
+    const objLoader = new OBJLoader();
+    mtlLoader.setPath( 'models/' );
+    mtlLoader.load( 'laz-model.vox.mtl', function( materials ) {
+        materials.preload();    
+        objLoader.setMaterials( materials );
+        objLoader.setPath( 'models/' );
+        objLoader.load( 'laz-model.vox.obj', function ( object ) {
+            object.traverse( function ( child ) {
+                if ( child instanceof THREE.Mesh ) {
+                    child.geometry.center();
+                }
+            } ); 
+            const singleObject = object.clone();            
+            
+            var boundingBox = new THREE.Box3().setFromObject( singleObject );
+            var cannonVecDim = new CANNON.Vec3(
+                (boundingBox.max.x - boundingBox.min.x)/2,
+                (boundingBox.max.y - boundingBox.min.y)/2,
+                (boundingBox.max.z - boundingBox.min.z)/2,
+            )
+            let cannonShape = new CANNON.Box(cannonVecDim);
+                    
+            let initialPosition = new CANNON.Vec3(
+                cannonVecDim.x, 
+                cannonVecDim.y, 
+                cannonVecDim.z
+            )
+            
+            playerBody = new CANNON.Body({
+                position: initialPosition,
+                mass: 1,
+                fixedRotation: true,
+                material: slippery,
+                shape: cannonShape
+            });
+            scene.add( singleObject );
+            world.addBody(playerBody);
+            threeCannonBinder.bindThreeCannon(singleObject, playerBody, 'player');
+        });
+    });
+}
 
 function loadWorld(worldSpec) {
     Object.keys(worldSpec).forEach((key) => {
@@ -119,7 +179,14 @@ function loadPhysicsObject(level, key) {
             } ); 
             level[key].forEach((spec,i) => {
                 const singleObject = object.clone()
-                const cannonBody = threeCannonBinder.getCannon(singleObject, spec.x, spec.y, spec.z, 0, spec.r, 0, spec.m);
+
+                singleObject.traverse(function(child) { 
+                    if ( child instanceof THREE.Mesh ) {
+                        child.rotateY(spec.r / 180 * Math.PI)
+                    }
+                })
+
+                const cannonBody = threeCannonBinder.getCannon(singleObject, spec.x, spec.y, spec.z, 0, 0, 0, spec.m);
                 scene.add( singleObject );
                 world.addBody(cannonBody);
                 threeCannonBinder.bindThreeCannon(singleObject, cannonBody, key + "_" + i);
@@ -141,6 +208,36 @@ const animate = () =>
 
     // Update Orbital Controls
     controls.update()
+
+    camera.position.x = playerBody.position.x - 4;
+    camera.position.z = playerBody.position.z;
+    camera.lookAt(playerBody.position.x, playerBody.position.y, playerBody.position.z);
+
+    if ( keyboard.pressed("W") )  {
+        playerBody.force = new CANNON.Vec3(9,0,0);
+        playerBody.quaternion.setFromEuler(0, Math.PI/2 ,0)
+        playerBody.material.friction = 0;
+    }
+    if ( keyboard.pressed("S") )  {
+        playerBody.force = new CANNON.Vec3(-9,0,0);
+        playerBody.quaternion.setFromEuler(0, -Math.PI/2 ,0)
+        playerBody.material.friction = 0;
+    }
+    if ( keyboard.pressed("A") ) {
+        playerBody.force = new CANNON.Vec3(0,0,-9);
+        playerBody.quaternion.setFromEuler(0, Math.PI ,0)
+        playerBody.material.friction = 0;
+    }
+    if ( keyboard.pressed("D") ) {
+        playerBody.force = new CANNON.Vec3(0,0,9);
+        playerBody.quaternion.setFromEuler(0, 0 ,0)
+        playerBody.material.friction = 0;
+    }
+    if (keyboard.up("W") || keyboard.up("A") || keyboard.up("S") || keyboard.up("D")) {
+        playerBody.force = new CANNON.Vec3(0,0,0);
+        playerBody.material.friction = 0.1;
+    }
+    keyboard.update()
 
     cannonDebugger.update();
 
