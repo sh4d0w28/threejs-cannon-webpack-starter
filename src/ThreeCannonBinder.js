@@ -16,7 +16,6 @@ class ThreeCannonBinder {
 
     getCannon = function (singleObject, x, y, z, rx, ry, rz, m) {
         var boundingBox = new THREE.Box3().setFromObject( singleObject );
-        console.log(boundingBox);
         var cannonVecDim = new CANNON.Vec3(
             (boundingBox.max.x - boundingBox.min.x)/2,
             (boundingBox.max.y - boundingBox.min.y)/2,
@@ -44,8 +43,16 @@ class ThreeCannonBinder {
             var po = this.__binding[key];
             var threeObject = po.three;
             var cannonObject = po.cannon;
-            threeObject.position.copy(cannonObject.position);
-            threeObject.quaternion.copy(cannonObject.quaternion);
+
+            if(key == 'player') {
+                threeObject.position.copy(cannonObject.position);
+                threeObject.position.y -= 1.5;
+                threeObject.quaternion.copy(cannonObject.quaternion);                    
+            } else {
+                threeObject.position.copy(cannonObject.position);
+                threeObject.quaternion.copy(cannonObject.quaternion);    
+            }
+
         });
     }
     

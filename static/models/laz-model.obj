@@ -4,7 +4,7 @@
 o 
 
 # material
-mtllib laz-model.vox.mtl
+mtllib laz-model.mtl
 usemtl palette
 
 # normals
