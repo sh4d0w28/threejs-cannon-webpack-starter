@@ -24,7 +24,7 @@ const world = new CANNON.World({
     gravity: new CANNON.Vec3(0, -9.82, 0), // m/s²
 });
 
-const cannonDebugger = new CannonDebugger(scene, world, {});
+const cannonDebugger = new CannonDebugger(scene, world, {color: "#001000"});
 
 /**
  * Sizes
@@ -127,9 +127,9 @@ fbxLoader.load('lionvox.fbx', function(object) {
     )
     let cannonShape = new CANNON.Box(cannonVecDim);
     let initialPosition = new CANNON.Vec3(
-        cannonVecDim.x, 
+        cannonVecDim.x-3, 
         cannonVecDim.y, 
-        cannonVecDim.z
+        cannonVecDim.z-3
     )
     
     playerBody = new CANNON.Body({
