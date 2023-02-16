@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: |
         npm install
-        npx run build
+        npx webpack --config ./bundler/webpack.prod.js
