@@ -6,6 +6,7 @@ import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader.js'
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js'
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+
 import ThreeCannonBinder from './ThreeCannonBinder';
 import world_1 from './wold_1';
 require('./KeyboardState')
@@ -24,7 +25,7 @@ const world = new CANNON.World({
     gravity: new CANNON.Vec3(0, -9.82, 0), // m/s²
 });
 
-const cannonDebugger = new CannonDebugger(scene, world, {color: "#001000"});
+const cannonDebugger = new CannonDebugger(scene, world, {color: "#00F900"});
 
 /**
  * Sizes
@@ -53,14 +54,14 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(90, sizes.width / sizes.height, 0.1, 300)
+const camera = new THREE.PerspectiveCamera(90, sizes.width / sizes.height, 0.1, 1000)
 camera.position.x = 5
 camera.position.y = 5
 camera.position.z = 5
 camera.lookAt(new THREE.Vector3(0,0,0))
 scene.add(camera)
 
-const light = new THREE.AmbientLight();
+const light = new THREE.AmbientLight('#ffffff', 1);
 scene.add(light);   
 
 const axesHelper = new THREE.AxesHelper(5);
@@ -100,13 +101,6 @@ groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0)
 world.addBody(groundBody)
 
 
-
-
-
-
-
-
-
 const fbxLoader = new FBXLoader();
 fbxLoader.setPath('models/');
 
@@ -127,9 +121,9 @@ fbxLoader.load('lionvox.fbx', function(object) {
     )
     let cannonShape = new CANNON.Box(cannonVecDim);
     let initialPosition = new CANNON.Vec3(
-        cannonVecDim.x-3, 
+        cannonVecDim.x+20, 
         cannonVecDim.y, 
-        cannonVecDim.z-3
+        cannonVecDim.z+20
     )
     
     playerBody = new CANNON.Body({
@@ -155,6 +149,7 @@ fbxLoader.load('lionvox.fbx', function(object) {
 
     modelReady = true;
     animationActions['PetalAnimation'].play()
+    animationActions['Walking Animation'].play()
 
 }, undefined, function ( error ) {
     console.error( error );
@@ -189,15 +184,36 @@ function loadPhysicsObject(level, key) {
                 }
             } ); 
             level[key].forEach((spec,i) => {
+
+                if(spec.y == null) {
+                    spec.y = 0;
+                }
+                if(spec.m == null) {
+                    spec.m = 0;
+                } 
+                if(spec.r == null) {
+                    spec.r = 0;
+                }
+                if(spec.sz == null) {
+                    spec.sz = 1;
+                }
+                if(spec.sy == null) {
+                    spec.sy = 1;
+                }
+                if(spec.sx == null) {
+                    spec.sx = 1;
+                }
+
                 const singleObject = object.clone()
 
                 singleObject.traverse(function(child) { 
                     if ( child instanceof THREE.Mesh ) {
                         child.rotateY(spec.r / 180 * Math.PI)
+                        child.scale.set(spec.sx, spec.sy, spec.sz);
                     }
                 })
 
-                const cannonBody = threeCannonBinder.getCannon(singleObject, spec.x, spec.y, spec.z, 0, 0, 0, spec.m);
+                const cannonBody = threeCannonBinder.getCannon(singleObject, spec.x, spec.y, spec.z, 0, 0, 0, spec.sx,spec.sy,spec.sz, spec.m);
                 scene.add( singleObject );
                 world.addBody(cannonBody);
                 threeCannonBinder.bindThreeCannon(singleObject, cannonBody, key + "_" + i);
@@ -223,9 +239,9 @@ const animate = () =>
     if (modelReady) mixer.update(clock.getDelta())
 
     if (modelReady) {
-        camera.position.x = playerBody.position.x - 6;
-        camera.position.z = playerBody.position.z;
-        camera.lookAt(playerBody.position.x, playerBody.position.y, playerBody.position.z);
+         camera.position.x = playerBody.position.x - 9;
+         camera.position.z = playerBody.position.z + 2;
+         camera.lookAt(playerBody.position.x, playerBody.position.y, playerBody.position.z);
     }
 
     if ( keyboard.pressed("W") )  {

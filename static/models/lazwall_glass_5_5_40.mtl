@@ -1,0 +1,16 @@
+# MagicaVoxel @ Ephtracy
+
+newmtl palette
+illum 1
+Ka 0.000 0.000 0.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+map_Kd lazwall_glass_5_5_40.png
+
+newmtl transparent
+illum 1
+Ka 0.000 0.000 0.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+d 0.5
+map_Kd lazwall_glass_5_5_40.png

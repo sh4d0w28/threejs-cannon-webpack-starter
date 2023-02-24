@@ -14,7 +14,7 @@ class ThreeCannonBinder {
         this.__binding[name] = {three: three, cannon:cannon};
     }
 
-    getCannon = function (singleObject, x, y, z, rx, ry, rz, m) {
+    getCannon = function (singleObject, x, y, z, rx, ry, rz, sx, sy, sz, mass) {
         var boundingBox = new THREE.Box3().setFromObject( singleObject );
         var cannonVecDim = new CANNON.Vec3(
             (boundingBox.max.x - boundingBox.min.x)/2,
@@ -31,7 +31,7 @@ class ThreeCannonBinder {
         
         let cannonBody = new CANNON.Body({
             position: initialPosition,
-            mass: m,
+            mass: mass,
             shape: cannonShape
         });
         cannonBody.quaternion.setFromEuler(rx, ry * Math.PI / 180, rz);
